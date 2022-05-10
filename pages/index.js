@@ -1,20 +1,21 @@
 import Head from 'next/head'
-import { withSSRContext } from 'aws-amplify'
+import { API } from 'aws-amplify'
 import { listParks } from '../src/graphql/queries'
-import { AmplifyS3Image } from '@aws-amplify/ui-react'
+import { AmplifyS3Image } from '@aws-amplify/ui-react/legacy'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-export async function getServerSideProps() {
-  const SSR = withSSRContext()
-  const { data } = await SSR.API.graphql({ query: listParks })
-  return {
-    props: {
-      parks: data.listParks.items,
-    },
-  }
-}
+export default function Home() {
+  const [parks, setParks] = useState([])
+  useEffect(() => {
+    const fetchData = async () => {
+      const p = await API.graphql({ query: listParks })
+      console.log(p)
+      setParks(p.data.listParks.items)
+    }
+    fetchData()
+  }, [])
 
-export default function Home({ parks }) {
   return (
     <div>
       <Head>
@@ -25,11 +26,11 @@ export default function Home({ parks }) {
           National Parks <Link href="/create-park">(+)</Link>
         </h1>
         <div className="img-grid">
-          {parks.map((park) => (
+          {parks?.map((park) => (
             <div key={park.id} className="img-square">
               <h2>{park.name}</h2>
               {/* use the AmplifyS3Image component to render the park's image using its S3 key */}
-              <AmplifyS3Image imgKey={park.image.key} height="200px" />
+              <AmplifyS3Image imgKey={park.image.key} />
             </div>
           ))}
         </div>
